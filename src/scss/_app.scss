@@ -1,0 +1,789 @@
+// 本文の下余白は画面下部の固定ボタンの高さ分確保する
+.app-main {
+  padding-bottom: 160px;
+}
+
+// ===== Tabs =====
+.tabs-bar {
+  position: sticky;
+  top: 0;
+  z-index: 900;
+  background: rgba($color-bg, 0.94);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid $color-border;
+}
+
+.tabs {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: $spacing-sm $spacing-md;
+  display: flex;
+  gap: $spacing-xs;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  &__btn {
+    flex: 1 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 14px;
+    border-radius: 999px;
+    font-size: $font-size-sm;
+    font-weight: 700;
+    color: $color-text-muted;
+    white-space: nowrap;
+
+    &:hover {
+      color: $color-primary-ink;
+    }
+
+    &.is-active {
+      background: $color-primary;
+      color: #fff;
+    }
+  }
+
+  &__count {
+    min-width: 20px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: rgba($color-text, 0.08);
+    font-size: $font-size-xs;
+
+    &:empty {
+      display: none;
+    }
+
+    .is-active & {
+      background: rgba(#fff, 0.25);
+    }
+  }
+}
+
+// ===== Today =====
+.today-head {
+  margin-bottom: $spacing-md;
+
+  &__date {
+    font-size: $font-size-sm;
+    font-weight: 700;
+    color: $color-primary-ink;
+  }
+
+  &__title {
+    font-size: $font-size-2xl;
+    font-weight: 800;
+    margin-top: 2px;
+
+    @media (max-width: $bp-mobile) {
+      font-size: $font-size-xl;
+    }
+  }
+}
+
+// 知ってる → やってみる → 体感した
+.flow-row {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  margin-bottom: $spacing-md;
+
+  &__item {
+    flex: 1;
+    min-width: 0;
+    background: $color-surface;
+    border-radius: $radius-lg;
+    padding: $spacing-sm $spacing-xs;
+    text-align: center;
+    box-shadow: 0 2px 12px rgba($color-primary, 0.08);
+
+    &.is-done {
+      background: $color-primary;
+      color: #fff;
+
+      .flow-row__value,
+      .flow-row__label {
+        color: #fff;
+      }
+    }
+  }
+
+  &__value {
+    display: block;
+    font-size: $font-size-xl;
+    font-weight: 800;
+    color: $color-primary-ink;
+  }
+
+  &__label {
+    display: block;
+    font-size: $font-size-xs;
+    font-weight: 700;
+    color: $color-text-muted;
+    white-space: nowrap;
+  }
+
+  &__arrow {
+    color: $color-primary;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+}
+
+// ===== Item cards =====
+.card-list {
+  display: grid;
+  gap: $spacing-sm;
+}
+
+.item-card {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  background: $color-surface;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  box-shadow: 0 2px 12px rgba($color-primary, 0.08);
+
+  &--idea {
+    flex-direction: column;
+    align-items: stretch;
+    gap: $spacing-sm;
+  }
+
+  &--planned {
+    border-left: 4px solid $color-primary;
+  }
+
+  &.is-stale {
+    box-shadow: 0 0 0 1px rgba($color-primary, 0.45), 0 2px 12px rgba($color-primary, 0.08);
+  }
+
+  &__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__badge {
+    display: inline-block;
+    font-size: $font-size-xs;
+    font-weight: 700;
+    color: $color-primary-ink;
+    background: $color-primary-soft;
+    padding: 2px 10px;
+    border-radius: 999px;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: $font-size-base;
+    font-weight: 700;
+    line-height: 1.5;
+    word-break: break-word;
+  }
+
+  &__meta {
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+
+    &.is-stale {
+      color: $color-primary-ink;
+      font-weight: 700;
+    }
+  }
+
+  &__memo {
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+
+    &--clamp {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $spacing-xs $spacing-sm;
+  }
+}
+
+.source-pill,
+.size-pill,
+.xp-pill {
+  display: inline-block;
+  font-size: $font-size-xs;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 999px;
+  color: $color-text-muted;
+  background: $color-surface-2;
+}
+
+.size-pill {
+  color: #fff;
+  background: $color-primary-ink;
+}
+
+.xp-pill {
+  color: $color-primary-ink;
+  background: transparent;
+  border: 1px solid $color-surface-3;
+}
+
+.gap-pill {
+  display: inline-block;
+  font-size: $font-size-xs;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 999px;
+
+  &--same {
+    color: $color-same;
+    background: $color-same-soft;
+  }
+
+  &--some {
+    color: $color-some;
+    background: $color-some-soft;
+  }
+
+  &--big {
+    color: $color-big;
+    background: $color-big-soft;
+  }
+}
+
+.mission-box {
+  background: $color-primary-soft;
+  border-radius: $radius-md;
+  padding: $spacing-sm $spacing-md;
+
+  &__label {
+    font-size: $font-size-xs;
+    font-weight: 800;
+    color: $color-primary-ink;
+  }
+
+  &__text {
+    font-size: $font-size-sm;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+}
+
+.text-btn {
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+  text-decoration: underline;
+  padding: 2px;
+
+  &:hover {
+    color: $color-primary-ink;
+  }
+}
+
+.add-inline {
+  width: 100%;
+  padding: 14px;
+  margin-bottom: $spacing-lg;
+  border: 2px dashed $color-primary;
+  border-radius: $radius-lg;
+  color: $color-primary-ink;
+  font-size: $font-size-base;
+  font-weight: 700;
+
+  &:hover {
+    background: $color-primary-soft;
+  }
+}
+
+// ===== 経験の棚 =====
+.search-field {
+  margin-bottom: $spacing-sm;
+
+  input {
+    width: 100%;
+    padding: 10px $spacing-md;
+    border: 1px solid $color-border;
+    border-radius: 999px;
+    background: $color-surface;
+    font-size: $font-size-base;
+    color: $color-text;
+  }
+}
+
+.episode {
+  &__row {
+    border-left: 3px solid $color-primary;
+    padding-left: $spacing-sm;
+
+    &--muted {
+      border-left-color: $color-surface-3;
+
+      .episode__text {
+        color: $color-text-muted;
+      }
+    }
+
+    &--gap {
+      border-left-color: $color-some;
+    }
+
+    &--insight {
+      border-left-color: $color-big;
+    }
+  }
+
+  &__label {
+    display: block;
+    font-size: $font-size-xs;
+    font-weight: 800;
+    color: $color-text-muted;
+  }
+
+  &__text {
+    font-size: $font-size-sm;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+}
+
+// ===== 経験値 =====
+.title-card {
+  background: $color-primary;
+  color: #fff;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  text-align: center;
+
+  &__label {
+    font-size: $font-size-xs;
+    font-weight: 700;
+    opacity: 0.92;
+  }
+
+  &__name {
+    font-size: $font-size-2xl;
+    font-weight: 800;
+    margin: 2px 0;
+  }
+
+  &__xp {
+    font-size: $font-size-sm;
+    margin-bottom: $spacing-sm;
+
+    strong {
+      font-size: $font-size-xl;
+    }
+  }
+
+  &__bar {
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(#fff, 0.28);
+    overflow: hidden;
+    max-width: 320px;
+    margin: 0 auto;
+  }
+
+  &__fill {
+    height: 100%;
+    width: 0;
+    background: #fff;
+    border-radius: 999px;
+    transition: width 0.3s ease;
+  }
+
+  &__next {
+    font-size: $font-size-xs;
+    margin-top: 6px;
+  }
+}
+
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-sm;
+  margin-bottom: $spacing-sm;
+}
+
+.stat-card {
+  background: $color-surface;
+  border-radius: $radius-lg;
+  padding: $spacing-md $spacing-sm;
+  text-align: center;
+  box-shadow: 0 2px 12px rgba($color-primary, 0.08);
+
+  &__value {
+    font-size: $font-size-2xl;
+    font-weight: 800;
+    color: $color-primary-ink;
+
+    @media (max-width: $bp-mobile) {
+      font-size: $font-size-xl;
+    }
+  }
+
+  &__label {
+    font-size: $font-size-xs;
+    color: $color-text-muted;
+    font-weight: 600;
+  }
+}
+
+.xp-rule {
+  font-size: $font-size-xs;
+  color: $color-text-muted;
+  line-height: 1.6;
+  margin-bottom: $spacing-xl;
+}
+
+.field-levels {
+  display: grid;
+  gap: $spacing-sm;
+}
+
+.field-level {
+  background: $color-surface;
+  border-radius: $radius-lg;
+  padding: $spacing-sm $spacing-md $spacing-md;
+  box-shadow: 0 2px 12px rgba($color-primary, 0.08);
+
+  &__head {
+    display: flex;
+    align-items: baseline;
+    gap: $spacing-sm;
+    margin-bottom: 6px;
+  }
+
+  &__name {
+    font-weight: 800;
+  }
+
+  &__lv {
+    font-weight: 800;
+    color: $color-primary-ink;
+  }
+
+  &__meta {
+    margin-left: auto;
+    font-size: $font-size-xs;
+    color: $color-text-muted;
+  }
+
+  &__track {
+    height: 8px;
+    border-radius: 999px;
+    background: $color-surface-2;
+    overflow: hidden;
+  }
+
+  &__fill {
+    height: 100%;
+    background: $color-primary;
+    border-radius: 999px;
+  }
+}
+
+.month-chart {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: $spacing-sm;
+  background: $color-surface;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  box-shadow: 0 2px 12px rgba($color-primary, 0.08);
+
+  &__col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  &__value {
+    font-size: $font-size-xs;
+    font-weight: 800;
+    color: $color-primary-ink;
+  }
+
+  &__bar-wrap {
+    height: 96px;
+    width: 100%;
+    max-width: 28px;
+    display: flex;
+    align-items: flex-end;
+    background: $color-surface-2;
+    border-radius: $radius-sm;
+    overflow: hidden;
+  }
+
+  &__bar {
+    width: 100%;
+    background: $color-primary;
+    border-radius: $radius-sm $radius-sm 0 0;
+  }
+
+  &__label {
+    font-size: $font-size-xs;
+    color: $color-text-muted;
+  }
+}
+
+// ===== Chips =====
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: $spacing-md;
+
+  &--tight {
+    margin-bottom: 0;
+  }
+}
+
+.chip {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid $color-border;
+  background: $color-surface;
+  font-size: $font-size-sm;
+  font-weight: 600;
+  color: $color-text;
+
+  &:hover {
+    border-color: $color-primary;
+  }
+
+  &.is-active {
+    background: $color-primary;
+    border-color: $color-primary;
+    color: #fff;
+  }
+}
+
+// ===== Modals =====
+.modal {
+  &__lead {
+    font-size: $font-size-lg;
+    font-weight: 800;
+    margin-bottom: $spacing-sm;
+    word-break: break-word;
+  }
+
+  &__summary {
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+    margin-bottom: $spacing-md;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  &__actions--split {
+    justify-content: space-between;
+  }
+
+  .field {
+    margin-bottom: $spacing-md;
+  }
+
+  input[type='date'] {
+    width: 100%;
+    padding: 10px $spacing-md;
+    border: 1px solid $color-border;
+    border-radius: $radius-md;
+    background: $color-surface;
+    font-size: $font-size-base;
+    color: $color-text;
+  }
+}
+
+.modal__actions--split .btn.hidden + .btn {
+  margin-left: auto;
+}
+
+.segmented {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-xs;
+  margin-bottom: $spacing-md;
+
+  &__btn {
+    padding: 10px 4px;
+    border: 1px solid $color-border;
+    border-radius: $radius-md;
+    color: $color-text-muted;
+    text-align: center;
+
+    &.is-active {
+      background: $color-primary-soft;
+      border-color: $color-primary;
+      color: $color-primary-ink;
+    }
+
+    &--some.is-active {
+      background: $color-some-soft;
+      border-color: $color-some;
+      color: $color-some;
+    }
+
+    &--big.is-active {
+      background: $color-big-soft;
+      border-color: $color-big;
+      color: $color-big;
+    }
+
+    &--same.is-active {
+      background: $color-same-soft;
+      border-color: $color-same;
+      color: $color-same;
+    }
+  }
+
+  &__label {
+    display: block;
+    font-size: $font-size-base;
+    font-weight: 800;
+  }
+
+  &__desc {
+    display: block;
+    font-size: 11px;
+    line-height: 1.4;
+    margin-top: 2px;
+  }
+}
+
+.ai-box {
+  background: $color-surface-2;
+  border-radius: $radius-md;
+  padding: $spacing-sm $spacing-md $spacing-md;
+  margin-bottom: $spacing-md;
+
+  &__text {
+    font-size: $font-size-sm;
+    color: $color-text-muted;
+    margin-bottom: $spacing-sm;
+    line-height: 1.6;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $spacing-sm;
+  }
+
+  &__links {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: $spacing-sm;
+  }
+}
+
+.ai-link {
+  font-size: $font-size-sm;
+  font-weight: 700;
+  color: $color-primary-ink;
+
+  &::after {
+    content: ' ↗';
+  }
+}
+
+.hint-box {
+  margin-bottom: $spacing-sm;
+
+  summary {
+    cursor: pointer;
+    font-size: $font-size-sm;
+    font-weight: 700;
+    color: $color-primary-ink;
+    padding: 4px 0;
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: $spacing-sm;
+  }
+
+  .chip {
+    font-size: $font-size-xs;
+    padding: 6px 12px;
+    text-align: left;
+  }
+}
+
+// ===== 画面下部の固定ボタン =====
+.about-btn {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(20, 20, 26, 0.72);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 24px;
+  padding: 10px 18px;
+  font-size: $font-size-sm;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(6px);
+
+  svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+}
+
+// 追加ボタンは「ご意見」の真上に積む
+.fab {
+  position: fixed;
+  bottom: 88px;
+  right: 24px;
+  z-index: 1000;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: $color-primary;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 16px rgba($color-primary, 0.45);
+
+  &:hover {
+    background: $color-primary-hover;
+  }
+}
+
+// トーストは固定ボタンより上に出す
+.toast {
+  bottom: 156px;
+}
