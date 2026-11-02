@@ -12,6 +12,9 @@ import {
 } from './store';
 import { convertRate, gapCount, totalXp, titleOf, fieldStats, streak, monthly, ageDays, doneNotes } from './stats';
 import { Note, MissionSize, GapLevel, NoteStatus } from './types';
+import { initClickTracking } from './analytics';
+
+initClickTracking();
 
 // ============================================================
 // DOM refs
