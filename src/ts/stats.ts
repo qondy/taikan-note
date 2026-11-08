@@ -75,6 +75,59 @@ export function monthly(notes: Note[], months = 6): { key: string; label: string
   return list;
 }
 
+/** 体験した順（古い順）。同じ日は登録順 */
+export function chronological(notes: Note[]): Note[] {
+  return doneNotes(notes).sort((a, b) =>
+    (a.experience?.date ?? '').localeCompare(b.experience?.date ?? '') || a.createdAt - b.createdAt);
+}
+
+/** はじめの頃・いまとして比べる件数（最大5件。少ないうちは半分ずつ） */
+export const COMPARE_SIZE = 5;
+
+export function compareGroups(sorted: Note[]): { early: Note[]; recent: Note[] } | null {
+  if (sorted.length < 2) return null;
+  const size = Math.min(COMPARE_SIZE, Math.floor(sorted.length / 2));
+  return { early: sorted.slice(0, size), recent: sorted.slice(-size) };
+}
+
+export interface GroupMetrics {
+  /** 体験した分野の数 */
+  fields: number;
+  /** 知識とのズレを見つけた割合（%） */
+  gapRate: number;
+  /** 気づきを書いた割合（%） */
+  insightRate: number;
+  /** 1件あたりの記録の文字数（結果・違ったこと・気づきの合計） */
+  avgChars: number;
+}
+
+export function groupMetrics(list: Note[]): GroupMetrics {
+  const n = Math.max(1, list.length);
+  const chars = list.reduce((sum, x) => {
+    const e = x.experience;
+    return sum + (e ? e.result.trim().length + e.gap.trim().length + e.insight.trim().length : 0);
+  }, 0);
+  return {
+    fields: new Set(list.map((x) => x.field)).size,
+    gapRate: Math.round((list.filter((x) => x.experience && x.experience.gapLevel !== 'same').length / n) * 100),
+    insightRate: Math.round((list.filter((x) => x.experience && x.experience.insight.trim()).length / n) * 100),
+    avgChars: Math.round(chars / n),
+  };
+}
+
+/** 体験順に並べたとき、その体験で新しい称号になったか */
+export function titleReached(sorted: Note[]): Map<string, string> {
+  const map = new Map<string, string>();
+  let xp = 0;
+  sorted.forEach((n) => {
+    const before = titleOf(xp).name;
+    xp += noteXp(n);
+    const after = titleOf(xp).name;
+    if (after !== before) map.set(n.id, after);
+  });
+  return map;
+}
+
 /** 作成してからの日数 */
 export function ageDays(createdAt: number): number {
   return Math.max(0, Math.floor((Date.now() - createdAt) / 86400000));

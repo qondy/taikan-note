@@ -69,6 +69,7 @@
       <div class="tabs" role="tablist">
         <button type="button" class="tabs__btn is-active" role="tab" data-tab="note" aria-selected="true">ノート<span class="tabs__count" id="count-note"></span></button>
         <button type="button" class="tabs__btn" role="tab" data-tab="shelf" aria-selected="false">経験の棚<span class="tabs__count" id="count-shelf"></span></button>
+        <button type="button" class="tabs__btn" role="tab" data-tab="journey" aria-selected="false">あゆみ</button>
         <button type="button" class="tabs__btn" role="tab" data-tab="stats" aria-selected="false">経験値</button>
       </div>
     </div>
@@ -119,6 +120,23 @@
         </div>
         <div class="filter-chips" id="shelf-chips" role="radiogroup"></div>
         <div id="shelf-list" class="card-list"></div>
+      </section>
+
+      <!-- あゆみ -->
+      <section class="panel hidden" data-panel="journey">
+        <div class="section__head">
+          <h2 class="section__title">あゆみ</h2>
+          <p class="section__desc">これまでに体感したことを、体験した順にすべて並べています。はじめの頃の自分と、いまの自分を比べてみましょう。</p>
+        </div>
+        <div id="journey-compare"></div>
+
+        <div class="section">
+          <div class="section__head section__head--row">
+            <h3 class="section__title">これまでの経験<span class="section__count" id="journey-count"></span></h3>
+            <div class="order-toggle" id="journey-order" role="radiogroup" aria-label="並び順"></div>
+          </div>
+          <div id="journey-list" class="journey"></div>
+        </div>
       </section>
 
       <!-- 経験値 -->

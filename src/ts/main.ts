@@ -2,7 +2,7 @@ import { User } from 'firebase/auth';
 import { onAuthChange, loginWithGoogle, logout } from './auth';
 import { showToast, openOverlay, closeOverlay, textEl, button } from './ui';
 import { submitFeedback } from './feedback';
-import { todayKey, labelOf } from './dates';
+import { todayKey, labelOf, parseKey } from './dates';
 import {
   FIELDS, SOURCES, MISSION_SIZES, MISSION_LABEL, GAP_LEVELS, GAP_LABEL, HINTS, STALE_DAYS, AI_LINKS,
   missionPrompt, comparePrompt, noteXp,
@@ -10,7 +10,10 @@ import {
 import {
   subscribeNotes, createNote, updateNote, setMission, saveExperience, clearExperience, deleteNote,
 } from './store';
-import { convertRate, gapCount, totalXp, titleOf, fieldStats, streak, monthly, ageDays, doneNotes } from './stats';
+import {
+  convertRate, gapCount, totalXp, titleOf, fieldStats, streak, monthly, ageDays, doneNotes,
+  chronological, compareGroups, groupMetrics, titleReached, GroupMetrics,
+} from './stats';
 import { Note, MissionSize, GapLevel, NoteStatus } from './types';
 import { initClickTracking } from './analytics';
 
@@ -44,6 +47,11 @@ const knownList = $('known-list');
 const inputSearch = $<HTMLInputElement>('input-search');
 const shelfChips = $('shelf-chips');
 const shelfList = $('shelf-list');
+
+const journeyCompare = $('journey-compare');
+const journeyCount = $('journey-count');
+const journeyOrder = $('journey-order');
+const journeyList = $('journey-list');
 
 const statTitle = $('stat-title');
 const statXp = $('stat-xp');
@@ -105,7 +113,8 @@ const btnFeedbackSend = $<HTMLButtonElement>('btn-feedback-send');
 // ============================================================
 // State
 // ============================================================
-type Tab = 'note' | 'shelf' | 'stats';
+type Tab = 'note' | 'shelf' | 'journey' | 'stats';
+type JourneyOrder = 'asc' | 'desc';
 
 interface State {
   uid: string | null;
@@ -115,6 +124,9 @@ interface State {
   tab: Tab;
   shelfField: string;
   search: string;
+  journeyOrder: JourneyOrder;
+  /** あゆみで開いている体験（再描画しても閉じないように） */
+  journeyOpen: Set<string>;
   editingId: string | null;
   formField: string;
   formSource: string;
@@ -134,6 +146,8 @@ const state: State = {
   tab: 'note',
   shelfField: 'all',
   search: '',
+  journeyOrder: 'asc',
+  journeyOpen: new Set(),
   editingId: null,
   formField: FIELDS[0],
   formSource: SOURCES[0],
@@ -409,6 +423,172 @@ function renderShelf(): void {
 }
 
 // ============================================================
+// Render: あゆみ
+// ============================================================
+const METRIC_ROWS: { key: keyof GroupMetrics; label: string; unit: string; praise: string }[] = [
+  { key: 'fields', label: '体験した分野', unit: '分野', praise: '体験する分野が広がりました' },
+  { key: 'gapRate', label: '知識とのズレを見つけた', unit: '%', praise: '知識とのズレに気づけるようになりました' },
+  { key: 'insightRate', label: '気づきを書いた', unit: '%', praise: '自分だけの気づきを言葉にできるようになりました' },
+  { key: 'avgChars', label: '1件の記録の量', unit: '文字', praise: '体験を語れる量が増えました' },
+];
+
+const shortDate = (key: string): string => {
+  const d = parseKey(key);
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+};
+
+function titleList(list: Note[]): HTMLElement {
+  const ul = document.createElement('ul');
+  ul.className = 'compare__titles';
+  list.forEach((n) => ul.appendChild(textEl('li', '', n.title)));
+  return ul;
+}
+
+function compareCard(sorted: Note[]): HTMLElement {
+  const groups = compareGroups(sorted);
+  if (!groups) {
+    return textEl('p', 'empty-state', sorted.length
+      ? '体験が2件以上たまると、はじめの頃といまの自分を比べられます。'
+      : 'まだ体感したことはありません。1つ体験して「やってみた！」を記録すると、ここからあゆみが始まります。');
+  }
+  const first = sorted[0].experience?.date ?? todayKey();
+  const days = Math.max(0, Math.round((parseKey(todayKey()).getTime() - parseKey(first).getTime()) / 86400000));
+  const early = groupMetrics(groups.early);
+  const recent = groupMetrics(groups.recent);
+  const k = groups.early.length;
+
+  const card = document.createElement('div');
+  card.className = 'compare';
+  card.appendChild(textEl('p', 'compare__span', `はじめての体験から${days}日・${sorted.length}件の体験`));
+
+  const cols = document.createElement('div');
+  cols.className = 'compare__cols';
+  [
+    { label: `はじめの頃（最初の${k}件）`, list: groups.early, cls: 'is-early' },
+    { label: `いま（直近の${k}件）`, list: groups.recent, cls: 'is-recent' },
+  ].forEach((g) => {
+    const col = document.createElement('div');
+    col.className = `compare__col ${g.cls}`;
+    col.append(textEl('p', 'compare__label', g.label), titleList(g.list));
+    cols.appendChild(col);
+  });
+  card.appendChild(cols);
+
+  const table = document.createElement('div');
+  table.className = 'compare__metrics';
+  METRIC_ROWS.forEach((m) => {
+    const a = early[m.key];
+    const b = recent[m.key];
+    const row = document.createElement('div');
+    row.className = `compare__metric${b > a ? ' is-up' : b < a ? ' is-down' : ''}`;
+    row.append(
+      textEl('span', 'compare__metric-label', m.label),
+      textEl('span', 'compare__metric-value', `${a}${m.unit}`),
+      textEl('span', 'compare__metric-arrow', b > a ? '↗' : b < a ? '↘' : '→'),
+      textEl('span', 'compare__metric-value compare__metric-value--now', `${b}${m.unit}`),
+    );
+    table.appendChild(row);
+  });
+  card.appendChild(table);
+
+  // 一番伸びたところをひとことで伝える（割合はポイント、量は倍率で比べる）
+  const growth = METRIC_ROWS
+    .map((m) => ({ m, score: m.unit === '%' ? (recent[m.key] - early[m.key]) / 100 : (recent[m.key] - early[m.key]) / Math.max(1, early[m.key]) }))
+    .filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score)[0];
+  card.appendChild(textEl('p', 'compare__message', growth
+    ? `はじめの頃より、${growth.m.praise}。`
+    : '体験を重ねるほど、はじめの頃との違いが見えてきます。'));
+  return card;
+}
+
+function journeyItem(n: Note, num: number): HTMLElement {
+  const e = n.experience;
+  const item = document.createElement('details');
+  item.className = 'journey-item';
+  if (!e) return item;
+  item.open = state.journeyOpen.has(n.id);
+  item.addEventListener('toggle', () => {
+    if (item.open) state.journeyOpen.add(n.id);
+    else state.journeyOpen.delete(n.id);
+  });
+  const summary = document.createElement('summary');
+  summary.className = 'journey-item__summary';
+  const body = document.createElement('div');
+  body.className = 'journey-item__main';
+  const meta = document.createElement('div');
+  meta.className = 'item-card__head';
+  meta.append(
+    pill(n.field, 'item-card__badge'),
+    pill(GAP_LABEL[e.gapLevel], `gap-pill gap-pill--${e.gapLevel}`),
+  );
+  body.append(textEl('span', 'journey-item__title', n.title), meta);
+  summary.append(
+    textEl('span', 'journey-item__num', `#${num}`),
+    textEl('span', 'journey-item__date', shortDate(e.date)),
+    body,
+  );
+  item.appendChild(summary);
+
+  const detail = document.createElement('div');
+  detail.className = 'journey-item__detail episode';
+  detail.appendChild(episodeRow('やってみたら', e.result));
+  if (e.gapLevel !== 'same' && e.gap.trim()) detail.appendChild(episodeRow('違ったこと', e.gap, 'episode__row--gap'));
+  if (e.insight.trim()) detail.appendChild(episodeRow('自分だけの気づき', e.insight, 'episode__row--insight'));
+  item.appendChild(detail);
+  return item;
+}
+
+function renderJourney(): void {
+  const sorted = chronological(state.notes);
+  journeyCount.textContent = sorted.length ? `${sorted.length}件` : '';
+
+  journeyOrder.replaceChildren(...([['asc', '古い順'], ['desc', '新しい順']] as [JourneyOrder, string][]).map(([key, label]) => {
+    const b = button(label, `chip chip--sm${state.journeyOrder === key ? ' is-active' : ''}`, () => {
+      state.journeyOrder = key;
+      renderJourney();
+    });
+    b.dataset.sort = key;
+    b.setAttribute('role', 'radio');
+    b.setAttribute('aria-checked', String(state.journeyOrder === key));
+    return b;
+  }));
+  journeyOrder.classList.toggle('hidden', sorted.length < 2);
+
+  if (!state.loaded) {
+    journeyCompare.replaceChildren();
+    journeyList.replaceChildren(emptyState('読み込み中…'));
+    return;
+  }
+  journeyCompare.replaceChildren(compareCard(sorted));
+
+  // 体験した順の番号（#1 がはじめての体験）と、称号が上がった体験
+  const numbered = sorted.map((n, i) => ({ n, num: i + 1 }));
+  const reached = titleReached(sorted);
+  const ordered = state.journeyOrder === 'asc' ? numbered : [...numbered].reverse();
+
+  const nodes: HTMLElement[] = [];
+  let month = '';
+  ordered.forEach(({ n, num }) => {
+    const date = n.experience?.date ?? '';
+    const m = date.slice(0, 7);
+    if (m !== month) {
+      month = m;
+      const count = sorted.filter((x) => x.experience?.date.startsWith(m)).length;
+      const d = parseKey(date);
+      nodes.push(textEl('h4', 'journey__month', `${d.getFullYear()}年${d.getMonth() + 1}月・${count}件`));
+    }
+    const title = reached.get(n.id);
+    const milestone = title ? textEl('p', 'journey__milestone', `称号「${title}」になりました`) : null;
+    // 古い順では体験のあと、新しい順では体験の上に「称号が上がった」を出す
+    if (milestone && state.journeyOrder === 'desc') nodes.push(milestone);
+    nodes.push(journeyItem(n, num));
+    if (milestone && state.journeyOrder === 'asc') nodes.push(milestone);
+  });
+  journeyList.replaceChildren(...(nodes.length ? nodes : [emptyState('体感したことが、ここに体験した順で並びます。')]));
+}
+
+// ============================================================
 // Render: 経験値
 // ============================================================
 function renderStats(): void {
@@ -483,6 +663,7 @@ function renderAll(): void {
   renderTabs();
   renderNote();
   renderShelf();
+  renderJourney();
   renderStats();
   btnNoteSubmit.disabled = state.pending.has('note');
   btnExpSubmit.disabled = !!state.expId && state.pending.has(`exp:${state.expId}`);
